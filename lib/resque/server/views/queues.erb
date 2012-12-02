@@ -33,6 +33,7 @@
     <tr>
       <th>Name</th>
       <th>Jobs</th>
+      <th>Latency</th>
     </tr>
     <% for queue in resque.queues.sort_by { |q| q.to_s } %>
     <tr>
@@ -44,6 +45,7 @@
     <tr class="<%= Resque::Failure.count.zero? ? "failed" : "failure" %>">
       <td class='queue failed'><a class="queue" href="<%= u :failed %>">failed</a></td>
       <td class='size'><%= Resque::Failure.count %></td>
+      <td>&nbsp;</td>
     </tr>
   </table>
 
