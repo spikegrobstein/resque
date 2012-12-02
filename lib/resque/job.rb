@@ -33,6 +33,11 @@ module Resque
       @queue = queue
       @payload = payload
       @failure_hooks_ran = false
+
+      # update queue latency:
+      key = ['latency', queue].join(':')
+      latency = Time.now.utc.to_i - payload['timestamp'].to_i
+      redis.set key, latency.to_s
     end
 
     # Creates a job by placing it on a queue. Expects a string queue
@@ -48,7 +53,7 @@ module Resque
         # decode(encode(args)) to ensure that args are normalized in the same manner as a non-inline job
         new(:inline, {'class' => klass, 'args' => decode(encode(args))}).perform
       else
-        Resque.push(queue, :class => klass.to_s, :args => args)
+        Resque.push(queue, 'class' => klass.to_s, 'args' => args, 'timestamp' => Time.now.utc.to_i)
       end
     end
 
