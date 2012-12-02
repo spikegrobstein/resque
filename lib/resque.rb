@@ -155,6 +155,10 @@ module Resque
     redis.llen("queue:#{queue}").to_i
   end
 
+  def latency(queue)
+    redis.get("latency:#{queue}").to_i
+  end
+
   # Returns an array of items currently queued. Queue name should be
   # a string.
   #
