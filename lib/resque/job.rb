@@ -31,7 +31,7 @@ module Resque
 
     def initialize(queue, payload)
       @queue = queue
-      @payload = payload
+      self.payload = payload
       @failure_hooks_ran = false
     end
 
@@ -43,18 +43,31 @@ module Resque
     def self.create(queue, klass, *args)
       Resque.validate(klass, queue)
 
+      d_payload = self.default_payload(queue, klass, *args)
+
       if Resque.inline?
         # Instantiating a Resque::Job and calling perform on it so callbacks run
         # decode(encode(args)) to ensure that args are normalized in the same manner as a non-inline job
-        new(:inline, default_payload.merge({'class' => klass, 'args' => decode(encode(args))})).perform
+        new(:inline, d_payload.merge({'class' => klass, 'args' => decode(encode(args))})).perform
       else
-        Resque.push(queue, default_payload.merge(:class => klass.to_s, :args => args))
+        Resque.push(queue, d_payload.merge(:class => klass.to_s, :args => args))
       end
     end
 
-    def self.default_payload
+    # the default payload
+    # Override this in a plugin to inject additional data into the job payload.
+    # the 'class' and 'args' fields will be overridden when enqueueing the job.
+    def self.default_payload(queue, klass, *args)
       {}
     end
+
+    # payload reader hook
+    # Override in a plugin to do pre-processing of the payload
+    # must return the payload as it will be represented to the newly created job.
+    def payload=(p)
+      @payload = p
+    end
+    private :payload=
 
     # Removes a job from a queue. Expects a string queue name, a
     # string class name, and, optionally, args.
