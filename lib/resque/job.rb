@@ -46,10 +46,14 @@ module Resque
       if Resque.inline?
         # Instantiating a Resque::Job and calling perform on it so callbacks run
         # decode(encode(args)) to ensure that args are normalized in the same manner as a non-inline job
-        new(:inline, {'class' => klass, 'args' => decode(encode(args))}).perform
+        new(:inline, default_payload.merge({'class' => klass, 'args' => decode(encode(args))})).perform
       else
-        Resque.push(queue, :class => klass.to_s, :args => args)
+        Resque.push(queue, default_payload.merge(:class => klass.to_s, :args => args))
       end
+    end
+
+    def self.default_payload
+      {}
     end
 
     # Removes a job from a queue. Expects a string queue name, a
